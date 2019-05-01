@@ -22,12 +22,13 @@ public class ProfilingBeanPostProcessor implements BeanPostProcessor {
         for (Method method : bean.getClass().getDeclaredMethods()) {
             if (method.isAnnotationPresent(Profiled.class)) {
                 Method interfaceMethod = ClassUtils.getInterfaceMethodIfPossible(method);
-                Pair<Class, List<Method>> present = beanClasses.computeIfPresent(beanName, (key, pair) -> {
-                    pair.getValue().add(interfaceMethod);
+                beanClasses.compute(beanName, (key, pair) -> {
+                    if (pair == null)
+                        pair = new Pair<>(bean.getClass(), new ArrayList<>(Collections.singletonList(interfaceMethod)));
+                    else pair.getValue().add(interfaceMethod);
+
                     return pair;
                 });
-                if (present == null)
-                    beanClasses.putIfAbsent(beanName, new Pair<>(bean.getClass(), new ArrayList<>(Collections.singletonList(interfaceMethod))));
             }
         }
         return bean;
